@@ -1,9 +1,9 @@
-<<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Karlowaty Snake</title>
+    <title>Snake</title>
     <style>
         body {
             display: flex;
@@ -46,12 +46,34 @@
             border-radius: 10px;
             cursor: pointer;
         }
+        .game-over {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+        .game-over h2 {
+            font-size: 36px;
+        }
+        .game-over button {
+            background-color: #444;
+            color: white;
+            font-size: 18px;
+            padding: 10px 20px;
+            margin-top: 20px;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
     <h1>Punkty: <span id="score">0</span></h1>
     <canvas id="gameCanvas" width="400" height="400"></canvas>
-    <button onclick="restartGame()">Restart</button>
+    <div class="game-over" id="gameOverScreen">
+        <h2>Game Over</h2>
+        <p>Zdobyłeś <span id="finalScore">0</span> punktów!</p>
+        <button onclick="restartGame()">Restart</button>
+    </div>
     
     <div class="controls">
         <button class="control-btn" onclick="setDirection('up')">▲</button>
@@ -66,6 +88,8 @@
         const canvas = document.getElementById("gameCanvas");
         const ctx = canvas.getContext("2d");
         const scoreElement = document.getElementById("score");
+        const gameOverScreen = document.getElementById("gameOverScreen");
+        const finalScoreElement = document.getElementById("finalScore");
 
         const gridSize = 20;
         const totalCells = (canvas.width / gridSize) * (canvas.height / gridSize);
@@ -77,16 +101,17 @@
         const appleImage = new Image();
         appleImage.src = 'apple.png';
         const snakeHeadImage = new Image();
-        snakeHeadImage.src = 'snake_head.png'; // Ścieżka do tekstury głowy węża
+        snakeHeadImage.src = 'snake_head.png';
 
         function initGame() {
-            snake = [{x: 200, y: 200}];
+            snake = [{x: 200, y: 200}, {x: 180, y: 200}]; // Wąż zaczyna od dwóch segmentów
             direction = "right";
             food = generateFood();
             gameRunning = true;
             speed = 200;
             score = 0;
             scoreElement.textContent = score;
+            gameOverScreen.style.display = "none"; // Ukrywamy ekran końcowy
             
             if (gameInterval) clearInterval(gameInterval);
             gameInterval = setInterval(() => { move(); draw(); }, speed);
@@ -112,8 +137,8 @@
             
             snake.forEach((segment, index) => {
                 if (index === 0) { // Głowa węża
-                    ctx.save(); // Zapisujemy stan kontekstu
-                    ctx.translate(segment.x + gridSize / 2, segment.y + gridSize / 2); // Przesuwamy punkt odniesienia
+                    ctx.save();
+                    ctx.translate(segment.x + gridSize / 2, segment.y + gridSize / 2);
                     if (direction === "right") {
                         ctx.rotate(0);
                     } else if (direction === "left") {
@@ -123,15 +148,14 @@
                     } else if (direction === "down") {
                         ctx.rotate(Math.PI / 2);
                     }
-                    ctx.drawImage(snakeHeadImage, -gridSize / 2, -gridSize / 2, gridSize, gridSize); // Rysujemy głowę
-                    ctx.restore(); // Przywracamy stan kontekstu
+                    ctx.drawImage(snakeHeadImage, -gridSize / 2, -gridSize / 2, gridSize, gridSize);
+                    ctx.restore();
                 } else { // Ciało węża
                     ctx.fillStyle = "lime";
                     ctx.fillRect(segment.x, segment.y, gridSize, gridSize);
                 }
             });
 
-            // Rysowanie jabłka z teksturą
             ctx.drawImage(appleImage, food.x, food.y, gridSize, gridSize);
         }
 
@@ -147,7 +171,8 @@
                 snake.some(segment => segment.x === head.x && segment.y === head.y)) {
                 gameRunning = false;
                 gameOverSound.play();
-                alert("Game Over. Zdobyłeś " + score + " punktów!");
+                finalScoreElement.textContent = score;
+                gameOverScreen.style.display = "flex";
                 clearInterval(gameInterval);
                 return;
             }
@@ -157,7 +182,7 @@
                 score++;
                 scoreElement.textContent = score;
                 eatSound.play();
-                food = generateFood(); // Generujemy nowe jabłko
+                food = generateFood();
             } else {
                 snake.pop();
             }
@@ -165,7 +190,8 @@
             if (snake.length === totalCells) {
                 gameRunning = false;
                 winSound.play();
-                alert("Gratulacje! Wypełniłeś całą planszę!");
+                finalScoreElement.textContent = score;
+                gameOverScreen.style.display = "flex";
                 clearInterval(gameInterval);
             }
         }
@@ -194,4 +220,3 @@
     </script>
 </body>
 </html>
-

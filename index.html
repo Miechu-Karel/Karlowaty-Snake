@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Snake</title>
+    <title>Karlowaty Snake</title>
     <style>
         body {
             display: flex;
@@ -11,6 +11,7 @@
             align-items: center;
             justify-content: center;
             height: 100vh;
+            margin: 0;
             background-image: url('background.png'); /* Ścieżka do Twojego pliku PNG */
             background-size: cover; /* Dopasowanie tła do całego ekranu */
             background-position: center; /* Wyśrodkowanie tła */
@@ -18,8 +19,8 @@
             font-family: Arial, sans-serif;
         }
         canvas {
-            background-color: black;
-            border: 2px solid white; /* Opcjonalnie: obramowanie planszy gry */
+            background-color: transparent;
+            border: 2px solid white;
         }
         button {
             margin-top: 10px;
@@ -69,11 +70,22 @@
         const canvas = document.getElementById("gameCanvas");
         const ctx = canvas.getContext("2d");
         const scoreElement = document.getElementById("score");
+
+        const eatSound = new Audio('eat.mp3');
+        const winSound = new Audio('win.mp3');
+        const gameOverSound = new Audio('gameover.mp3');
         
         const gridSize = 20;
         const totalCells = (canvas.width / gridSize) * (canvas.height / gridSize);
         let snake, direction, food, gameRunning, speed, score;
         let gameInterval;
+
+        // Załadowanie obrazów
+        const appleImage = new Image();
+        appleImage.src = 'apple.png';
+
+        const snakeHeadImage = new Image();
+        snakeHeadImage.src = 'snake_head.png';
 
         function initGame() {
             snake = [{x: 200, y: 200}, {x: 180, y: 200}];  // Wąż zaczyna od dwóch segmentów
@@ -91,21 +103,19 @@
         function draw() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             
+            // Rysowanie ciała węża
             snake.forEach((segment, index) => {
-                ctx.fillStyle = "#6d1fc8";  // Kolor węża zmieniony na #631bb7
-                ctx.fillRect(segment.x, segment.y, gridSize, gridSize);
-                
-                if (index === 0) { // Głowa węża z oczami
-                    ctx.fillStyle = "black";
-                    let eyeOffsetX = direction === "left" ? 2 : direction === "right" ? 12 : 4;
-                    let eyeOffsetY = direction === "up" ? 2 : direction === "down" ? 12 : 4;
-                    ctx.fillRect(segment.x + eyeOffsetX, segment.y + 4, 4, 4);
-                    ctx.fillRect(segment.x + eyeOffsetX, segment.y + 12, 4, 4);
+                if (index === 0) {
+                    // Rysowanie głowy węża z teksturą
+                    ctx.drawImage(snakeHeadImage, segment.x, segment.y, gridSize, gridSize);
+                } else {
+                    ctx.fillStyle = "#631bb7";  // Kolor ciała węża
+                    ctx.fillRect(segment.x, segment.y, gridSize, gridSize);
                 }
             });
             
-            ctx.fillStyle = "red";
-            ctx.fillRect(food.x, food.y, gridSize, gridSize);
+            // Rysowanie jedzenia
+            ctx.drawImage(appleImage, food.x, food.y, gridSize, gridSize);
         }
 
         function move() {
@@ -119,6 +129,7 @@
             if (head.x < 0 || head.x >= canvas.width || head.y < 0 || head.y >= canvas.height ||
                 snake.some(segment => segment.x === head.x && segment.y === head.y)) {
                 gameRunning = false;
+                gameOverSound.play();  // Gra kończy się dźwiękiem przegranej
                 alert("Game Over. Zdobyłeś " + score + " punktów!");
                 clearInterval(gameInterval);
                 return;
@@ -128,6 +139,7 @@
             if (head.x === food.x && head.y === food.y) {
                 score++;
                 scoreElement.textContent = score;
+                eatSound.play();  // Dźwięk przy jedzeniu jabłka
                 food = {
                     x: Math.floor(Math.random() * (canvas.width / gridSize)) * gridSize,
                     y: Math.floor(Math.random() * (canvas.height / gridSize)) * gridSize
@@ -138,6 +150,7 @@
 
             if (snake.length === totalCells) {
                 gameRunning = false;
+                winSound.play();  // Dźwięk przy wygranej
                 alert("Gratulacje! Wypełniłeś całą planszę!");
                 clearInterval(gameInterval);
             }

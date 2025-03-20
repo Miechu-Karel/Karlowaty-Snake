@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Snake</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            background-color: #222;
+            color: white;
+            font-family: Arial, sans-serif;
+        }
+        canvas {
+            background-color: black;
+        }
+        button {
+            margin-top: 10px;
+            padding: 10px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        .controls {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 10px;
+        }
+        .row {
+            display: flex;
+            justify-content: center;
+        }
+        .control-btn {
+            width: 50px;
+            height: 50px;
+            margin: 5px;
+            font-size: 20px;
+            text-align: center;
+            background-color: #444;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <h1>Punkty: <span id="score">0</span></h1>
+    <canvas id="gameCanvas" width="400" height="400"></canvas>
+    <button onclick="restartGame()">Restart</button>
+    
+    <div class="controls">
+        <button class="control-btn" onclick="setDirection('up')">▲</button>
+        <div class="row">
+            <button class="control-btn" onclick="setDirection('left')">◄</button>
+            <button class="control-btn" onclick="setDirection('down')">▼</button>
+            <button class="control-btn" onclick="setDirection('right')">►</button>
+        </div>
+    </div>
+    
+    <script>
+        const canvas = document.getElementById("gameCanvas");
+        const ctx = canvas.getContext("2d");
+        const scoreElement = document.getElementById("score");
+
+        const gridSize = 20;
+        const totalCells = (canvas.width / gridSize) * (canvas.height / gridSize);
+        let snake, direction, food, gameRunning, speed, score;
+        let gameInterval;
+        const eatSound = new Audio('eat.mp3');
+        const winSound = new Audio('win.mp3');
+        const gameOverSound = new Audio('gameover.mp3');
+        const appleImage = new Image();
+        appleImage.src = 'apple.png';
+        const snakeHeadImage = new Image();
+        snakeHeadImage.src = 'snake_head.png'; // Ścieżka do tekstury głowy węża
+
+        function initGame() {
+            snake = [{x: 200, y: 200}];
+            direction = "right";
+            food = generateFood();
+            gameRunning = true;
+            speed = 200;
+            score = 0;
+            scoreElement.textContent = score;
+            
+            if (gameInterval) clearInterval(gameInterval);
+            gameInterval = setInterval(() => { move(); draw(); }, speed);
+        }
+
+        function generateFood() {
+            let foodPosition;
+            let validPosition = false;
+            
+            while (!validPosition) {
+                foodPosition = {
+                    x: Math.floor(Math.random() * (canvas.width / gridSize)) * gridSize,
+                    y: Math.floor(Math.random() * (canvas.height / gridSize)) * gridSize
+                };
+                
+                validPosition = !snake.some(segment => segment.x === foodPosition.x && segment.y === foodPosition.y);
+            }
+            return foodPosition;
+        }
+
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            snake.forEach((segment, index) => {
+                if (index === 0) { // Głowa węża
+                    ctx.save(); // Zapisujemy stan kontekstu
+                    ctx.translate(segment.x + gridSize / 2, segment.y + gridSize / 2); // Przesuwamy punkt odniesienia
+                    if (direction === "right") {
+                        ctx.rotate(0);
+                    } else if (direction === "left") {
+                        ctx.rotate(Math.PI);
+                    } else if (direction === "up") {
+                        ctx.rotate(-Math.PI / 2);
+                    } else if (direction === "down") {
+                        ctx.rotate(Math.PI / 2);
+                    }
+                    ctx.drawImage(snakeHeadImage, -gridSize / 2, -gridSize / 2, gridSize, gridSize); // Rysujemy głowę
+                    ctx.restore(); // Przywracamy stan kontekstu
+                } else { // Ciało węża
+                    ctx.fillStyle = "lime";
+                    ctx.fillRect(segment.x, segment.y, gridSize, gridSize);
+                }
+            });
+
+            // Rysowanie jabłka z teksturą
+            ctx.drawImage(appleImage, food.x, food.y, gridSize, gridSize);
+        }
+
+        function move() {
+            if (!gameRunning) return;
+            let head = {...snake[0]};
+            if (direction === "right") head.x += gridSize;
+            if (direction === "left") head.x -= gridSize;
+            if (direction === "up") head.y -= gridSize;
+            if (direction === "down") head.y += gridSize;
+
+            if (head.x < 0 || head.x >= canvas.width || head.y < 0 || head.y >= canvas.height ||
+                snake.some(segment => segment.x === head.x && segment.y === head.y)) {
+                gameRunning = false;
+                gameOverSound.play();
+                alert("Game Over. Zdobyłeś " + score + " punktów!");
+                clearInterval(gameInterval);
+                return;
+            }
+
+            snake.unshift(head);
+            if (head.x === food.x && head.y === food.y) {
+                score++;
+                scoreElement.textContent = score;
+                eatSound.play();
+                food = generateFood(); // Generujemy nowe jabłko
+            } else {
+                snake.pop();
+            }
+
+            if (snake.length === totalCells) {
+                gameRunning = false;
+                winSound.play();
+                alert("Gratulacje! Wypełniłeś całą planszę!");
+                clearInterval(gameInterval);
+            }
+        }
+
+        function changeDirection(event) {
+            const key = event.key.toLowerCase();
+            if (key === "d" && direction !== "left") direction = "right";
+            if (key === "a" && direction !== "right") direction = "left";
+            if (key === "w" && direction !== "down") direction = "up";
+            if (key === "s" && direction !== "up") direction = "down";
+        }
+
+        function setDirection(newDirection) {
+            if (newDirection === "right" && direction !== "left") direction = "right";
+            if (newDirection === "left" && direction !== "right") direction = "left";
+            if (newDirection === "up" && direction !== "down") direction = "up";
+            if (newDirection === "down" && direction !== "up") direction = "down";
+        }
+
+        function restartGame() {
+            initGame();
+        }
+
+        document.addEventListener("keydown", changeDirection);
+        initGame();
+    </script>
+</body>
+</html>

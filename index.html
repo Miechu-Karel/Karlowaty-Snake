@@ -214,13 +214,14 @@
             return position;
         }
 
-        function changeDirection(event) {
-            const key = event.key.toLowerCase();
-            if (key === "d" && direction !== "left") direction = "right";
-            if (key === "a" && direction !== "right") direction = "left";
-            if (key === "w" && direction !== "down") direction = "up";
-            if (key === "s" && direction !== "up") direction = "down";
-        }
+		function changeDirection(input) {
+			let key = typeof input === 'string' ? input : event.key.toLowerCase();
+	
+			if (key === "d" || key === "right") direction = direction !== "left" ? "right" : direction;
+			if (key === "a" || key === "left") direction = direction !== "right" ? "left" : direction;
+			if (key === "w" || key === "up") direction = direction !== "down" ? "up" : direction;
+			if (key === "s" || key === "down") direction = direction !== "up" ? "down" : direction;
+		}
 
         function restartGame() {
             startScreen.style.display = "none";
@@ -252,14 +253,7 @@
         }
 
         document.addEventListener("keydown", changeDirection);
-	function changeDirection(input) {
-		let key = typeof input === 'string' ? input : event.key.toLowerCase();
-	
-		if (key === "d" || key === "right") direction = direction !== "left" ? "right" : direction;
-		if (key === "a" || key === "left") direction = direction !== "right" ? "left" : direction;
-		if (key === "w" || key === "up") direction = direction !== "down" ? "up" : direction;
-		if (key === "s" || key === "down") direction = direction !== "up" ? "down" : direction;
-	}
+
 
     </script>
 	<div id="mobileControls">

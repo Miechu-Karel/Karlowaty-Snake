@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Karlowaty Snake</title>
     <style>
+
         body {
             display: flex;
             flex-direction: column;
@@ -14,6 +15,9 @@
             background-color: #313131;
             color: white;
             font-family: Arial, sans-serif;
+justify-content: flex-start; /* Przenosi stronę do góry */
+    padding-top: 20px; /* Możesz dostosować wartość */
+overflow: hidden;
         }
         canvas {
             border: 2px solid white;
@@ -25,7 +29,7 @@
             position: fixed;
             top: 50%;
             left: 50%;
-            transform: translate(-50%, -38%);
+            transform: translate(-50%, -59%);
             background: rgba(0, 0, 0, 0.8);
             color: white;
             padding:110px 170px;
@@ -58,7 +62,7 @@
             position: fixed;
             top: 50%; /* Ustawiłem na 50% */
             left: 50%;
-            transform: translate(-50%, -42%); /* Ustawiłem na środek */
+            transform: translate(-50%, -61%); /* Ustawiłem na środek */
             background-color: rgba(0, 0, 0, 0.7);
             color: white;
             padding: 115px 40px;
@@ -69,7 +73,7 @@
         }
 		h1 {
 			position: relative;
-			top: -30px; /* Podniesienie napisu do góry */
+			top: -32px; /* Podniesienie napisu do góry */
 		}
 		#mobileControls {
 		display: none;
@@ -77,7 +81,39 @@
 		bottom: 20px;
 		left: 50%;
 		transform: translateX(-50%);
-	}
+		}
+#mobileControls {
+    position: absolute;
+    bottom: 27px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    display: flex;
+    margin-top: 50px; /* Przesuwa strzałki w dół */
+}
+
+.arrow-row {
+    display: flex;
+    justify-content: center;
+}
+
+.arrow-button {
+    width: 50px;
+    height: 50px;
+    margin: 5px;
+    font-size: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #555;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+}
+
 
 	.mobile-btn {
 		width: 50px;
@@ -255,16 +291,22 @@
         document.addEventListener("keydown", changeDirection);
 
 
+
+document.addEventListener('touchmove', function(event) {
+    event.preventDefault();
+}, { passive: false });
+
     </script>
 	<div id="mobileControls">
-		<div>
-			<button class="mobile-btn" onclick="changeDirection('up')">▲</button>
-		</div>
-		<div>
-			<button class="mobile-btn" onclick="changeDirection('left')">◀</button>
-			<button class="mobile-btn" onclick="changeDirection('down')">▼</button>
-			<button class="mobile-btn" onclick="changeDirection('right')">▶</button>
-		</div>
-	</div>
+    <div class="arrow-row">
+        <button class="arrow-button" onclick="changeDirection('up')">▲</button>
+    </div>
+    <div class="arrow-row">
+        <button class="arrow-button" onclick="changeDirection('left')">◄</button>
+        <button class="arrow-button" onclick="changeDirection('down')">▼</button>
+        <button class="arrow-button" onclick="changeDirection('right')">►</button>
+    </div>
+</div>
+
 </body>
 </html>

@@ -11,16 +11,27 @@
             align-items: center;
             justify-content: center;
             height: 100vh;
-            margin: 0;
-            background-image: url('background.png'); /* Upewnij się, że ta ścieżka jest poprawna */
-            background-size: cover; /* Tło dopasowuje się do ekranu */
-            background-position: center; /* Wyśrodkowanie tła */
+            background-image: url('background.png');
+            background-size: cover;
+            background-position: center;
             color: white;
             font-family: Arial, sans-serif;
+            margin: 0;
         }
         canvas {
-            background-color: transparent;
+            background-color: black;
             border: 2px solid white;
+        }
+        #gameOverScreen {
+            display: none;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.8);
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
         }
         button {
             margin-top: 10px;
@@ -28,94 +39,90 @@
             font-size: 16px;
             cursor: pointer;
         }
-        .controls {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            margin-top: 10px;
-        }
-        .row {
-            display: flex;
-            justify-content: center;
-        }
-        .control-btn {
-            width: 50px;
-            height: 50px;
-            margin: 5px;
-            font-size: 20px;
-            text-align: center;
-            background-color: #444;
-            color: white;
-            border: none;
-            border-radius: 10px;
-            cursor: pointer;
-        }
     </style>
 </head>
 <body>
     <h1>Punkty: <span id="score">0</span></h1>
     <canvas id="gameCanvas" width="400" height="400"></canvas>
-    <button onclick="restartGame()">Restart</button>
     
-    <div class="controls">
-        <button class="control-btn" onclick="setDirection('up')">▲</button>
-        <div class="row">
-            <button class="control-btn" onclick="setDirection('left')">◄</button>
-            <button class="control-btn" onclick="setDirection('down')">▼</button>
-            <button class="control-btn" onclick="setDirection('right')">►</button>
-        </div>
+    <div id="gameOverScreen">
+        <h2 id="gameOverText"></h2>
+        <button onclick="restartGame()">Zagraj ponownie</button>
     </div>
-    
+
     <script>
         const canvas = document.getElementById("gameCanvas");
         const ctx = canvas.getContext("2d");
         const scoreElement = document.getElementById("score");
+        const gameOverScreen = document.getElementById("gameOverScreen");
+        const gameOverText = document.getElementById("gameOverText");
 
-        const eatSound = new Audio('eat.mp3');
-        const winSound = new Audio('win.mp3');
-        const gameOverSound = new Audio('gameover.mp3');
-        
+        const eatSound = new Audio("eat.mp3");
+        const winSound = new Audio("win.mp3");
+        const gameOverSound = new Audio("gameover.mp3");
+
         const gridSize = 20;
-        const totalCells = (canvas.width / gridSize) * (canvas.height / gridSize);
-        let snake, direction, food, gameRunning, speed, score;
+        let snake, direction, food, gameRunning, score;
         let gameInterval;
-
-        // Załadowanie obrazów
-        const appleImage = new Image();
-        appleImage.src = 'apple.png';
-
-        const snakeHeadImage = new Image();
-        snakeHeadImage.src = 'snake_head.png';
+        const snakeHeadImg = new Image();
+        snakeHeadImg.src = "snake_head.png";
+        const appleImg = new Image();
+        appleImg.src = "apple.png";
 
         function initGame() {
-            snake = [{x: 200, y: 200}, {x: 180, y: 200}];  // Wąż zaczyna od dwóch segmentów
+            snake = [{x: 200, y: 200}, {x: 180, y: 200}];
             direction = "right";
-            food = {x: 100, y: 100};
             gameRunning = true;
-            speed = 200;
             score = 0;
             scoreElement.textContent = score;
-            
+            gameOverScreen.style.display = "none";
+
+            placeFood();
             if (gameInterval) clearInterval(gameInterval);
-            gameInterval = setInterval(() => { move(); draw(); }, speed);
+            gameInterval = setInterval(() => { move(); draw(); }, 200);
+        }
+
+        function placeFood() {
+            do {
+                food = {
+                    x: Math.floor(Math.random() * (canvas.width / gridSize)) * gridSize,
+                    y: Math.floor(Math.random() * (canvas.height / gridSize)) * gridSize
+                };
+            } while (snake.some(segment => segment.x === food.x && segment.y === food.y));
         }
 
         function draw() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            
-            // Rysowanie ciała węża
+
+            // Rysowanie węża
             snake.forEach((segment, index) => {
                 if (index === 0) {
-                    // Rysowanie głowy węża z teksturą
-                    ctx.drawImage(snakeHeadImage, segment.x, segment.y, gridSize, gridSize);
+                    drawRotatedImage(snakeHeadImg, segment.x, segment.y, getRotationAngle());
                 } else {
-                    ctx.fillStyle = "#631bb7";  // Kolor ciała węża
+                    ctx.fillStyle = "#631bb7";
                     ctx.fillRect(segment.x, segment.y, gridSize, gridSize);
                 }
             });
-            
-            // Rysowanie jedzenia
-            ctx.drawImage(appleImage, food.x, food.y, gridSize, gridSize);
+
+            // Rysowanie jabłka
+            ctx.drawImage(appleImg, food.x, food.y, gridSize, gridSize);
+        }
+
+        function getRotationAngle() {
+            switch (direction) {
+                case "right": return 0;
+                case "down": return 90;
+                case "left": return 180;
+                case "up": return -90;
+            }
+        }
+
+        function drawRotatedImage(image, x, y, angle) {
+            ctx.save();
+            ctx.translate(x + gridSize / 2, y + gridSize / 2);
+            ctx.rotate(angle * Math.PI / 180);
+            ctx.drawImage(image, -gridSize / 2, -gridSize / 2, gridSize, gridSize);
+            ctx.restore();
         }
 
         function move() {
@@ -128,31 +135,35 @@
 
             if (head.x < 0 || head.x >= canvas.width || head.y < 0 || head.y >= canvas.height ||
                 snake.some(segment => segment.x === head.x && segment.y === head.y)) {
-                gameRunning = false;
-                gameOverSound.play();  // Gra kończy się dźwiękiem przegranej
-                alert("Game Over. Zdobyłeś " + score + " punktów!");
-                clearInterval(gameInterval);
+                endGame(false);
                 return;
             }
 
             snake.unshift(head);
             if (head.x === food.x && head.y === food.y) {
+                eatSound.play();
                 score++;
                 scoreElement.textContent = score;
-                eatSound.play();  // Dźwięk przy jedzeniu jabłka
-                food = {
-                    x: Math.floor(Math.random() * (canvas.width / gridSize)) * gridSize,
-                    y: Math.floor(Math.random() * (canvas.height / gridSize)) * gridSize
-                };
+                if (snake.length === (canvas.width / gridSize) * (canvas.height / gridSize)) {
+                    endGame(true);
+                } else {
+                    placeFood();
+                }
             } else {
                 snake.pop();
             }
+        }
 
-            if (snake.length === totalCells) {
-                gameRunning = false;
-                winSound.play();  // Dźwięk przy wygranej
-                alert("Gratulacje! Wypełniłeś całą planszę!");
-                clearInterval(gameInterval);
+        function endGame(won) {
+            gameRunning = false;
+            clearInterval(gameInterval);
+            gameOverScreen.style.display = "block";
+            if (won) {
+                winSound.play();
+                gameOverText.innerHTML = "Gratulacje! Wypełniłeś planszę!";
+            } else {
+                gameOverSound.play();
+                gameOverText.innerHTML = "Przegrana! Zdobyłeś " + score + " punktów.";
             }
         }
 
@@ -164,13 +175,6 @@
             if (key === "s" && direction !== "up") direction = "down";
         }
 
-        function setDirection(newDirection) {
-            if (newDirection === "right" && direction !== "left") direction = "right";
-            if (newDirection === "left" && direction !== "right") direction = "left";
-            if (newDirection === "up" && direction !== "down") direction = "up";
-            if (newDirection === "down" && direction !== "up") direction = "down";
-        }
-
         function restartGame() {
             initGame();
         }
@@ -180,4 +184,3 @@
     </script>
 </body>
 </html>
-

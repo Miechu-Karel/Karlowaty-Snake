@@ -71,6 +71,31 @@
 			position: relative;
 			top: -30px; /* Podniesienie napisu do góry */
 		}
+		#mobileControls {
+		display: none;
+		position: absolute;
+		bottom: 20px;
+		left: 50%;
+		transform: translateX(-50%);
+	}
+
+	.mobile-btn {
+		width: 50px;
+		height: 50px;
+		margin: 5px;
+		font-size: 20px;
+		background-color: #fff;
+		border: none;
+		border-radius: 5px;
+		text-align: center;
+	}
+
+	@media (max-width: 768px) {
+		#mobileControls {
+			display: block;
+		}
+	}
+
     </style>
 </head>
 <body>
@@ -227,6 +252,25 @@
         }
 
         document.addEventListener("keydown", changeDirection);
+	function changeDirection(input) {
+		let key = typeof input === 'string' ? input : event.key.toLowerCase();
+	
+		if (key === "d" || key === "right") direction = direction !== "left" ? "right" : direction;
+		if (key === "a" || key === "left") direction = direction !== "right" ? "left" : direction;
+		if (key === "w" || key === "up") direction = direction !== "down" ? "up" : direction;
+		if (key === "s" || key === "down") direction = direction !== "up" ? "down" : direction;
+	}
+
     </script>
+	<div id="mobileControls">
+		<div>
+			<button class="mobile-btn" onclick="changeDirection('up')">▲</button>
+		</div>
+		<div>
+			<button class="mobile-btn" onclick="changeDirection('left')">◀</button>
+			<button class="mobile-btn" onclick="changeDirection('down')">▼</button>
+			<button class="mobile-btn" onclick="changeDirection('right')">▶</button>
+		</div>
+	</div>
 </body>
 </html>
